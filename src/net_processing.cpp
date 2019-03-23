@@ -2334,19 +2334,19 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     }
 
     if (strCommand == NetMsgType::TX) {
+        CTransactionRef ptx;
+        vRecv >> ptx;
+        const CTransaction& tx = *ptx;
         // Stop processing the transaction early if
         // We are in blocks only mode and peer is either not whitelisted or whitelistrelay is off
         if (!fRelayTxes && (!pfrom->fWhitelisted || !gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)))
         {
-            LogPrint(BCLog::NET, "transaction sent in violation of protocol peer=%d\n", pfrom->GetId());
+            LogPrint(BCLog::NET, "transaction sent in violation of protocol txid %s; %s\n", tx.GetHash().ToString(), pfrom->ToString());
             return true;
         }
 
         std::deque<COutPoint> vWorkQueue;
         std::vector<uint256> vEraseQueue;
-        CTransactionRef ptx;
-        vRecv >> ptx;
-        const CTransaction& tx = *ptx;
 
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
@@ -2357,9 +2357,15 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         CValidationState state;
 
         CNodeState* nodestate = State(pfrom->GetId());
-        nodestate->m_tx_download.m_tx_announced.erase(inv.hash);
-        nodestate->m_tx_download.m_tx_in_flight.erase(inv.hash);
+        const bool ann = nodestate->m_tx_download.m_tx_announced.erase(inv.hash);
+        const bool inf = nodestate->m_tx_download.m_tx_in_flight.erase(inv.hash);
         EraseTxRequest(inv.hash);
+        if (!ann) {
+            LogPrint(BCLog::NET, "transaction sent unannounced txid %s; %s\n", tx.GetHash().ToString(), pfrom->ToString());
+        } else {
+            if (!inf) LogPrint(BCLog::NET, "transaction sent unrequested txid %s; %s\n", tx.GetHash().ToString(), pfrom->ToString());
+        }
+        assert(ann || !inf); // tx must either be announced or not in flight
 
         std::list<CTransactionRef> lRemovedTxn;
 

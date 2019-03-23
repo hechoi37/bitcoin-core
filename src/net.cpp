@@ -2648,6 +2648,23 @@ CNode::~CNode()
     CloseSocket(hSocket);
 }
 
+std::string CNode::ToString() const
+{
+    return strprintf("id %d, ua %s, version %d, addr %s, tx_relay %d, tx_sendmempool %d, fee_filter %d, services %016x, time_connected %d, last_tx %d, last_block %d, last_mempool %d",
+        GetId(),
+        cleanSubVer,
+        nVersion,
+        addr.ToString(),
+        fRelayTxes,
+        fSendMempool,
+        minFeeFilter,
+        nServices,
+        GetSystemTimeInSeconds() - nTimeConnected,
+        nLastTXTime ? GetTime() - nLastTXTime : 0,
+        nLastBlockTime ? GetTime() - nLastBlockTime : 0,
+        timeLastMempoolReq ? GetTime() - timeLastMempoolReq : 0);
+}
+
 bool CConnman::NodeFullyConnected(const CNode* pnode)
 {
     return pnode && pnode->fSuccessfullyConnected && !pnode->fDisconnect;
