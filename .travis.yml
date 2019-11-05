@@ -111,7 +111,7 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_i686.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout] [unsigned char]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_amd64_qt5.sh"
 
@@ -127,17 +127,17 @@ jobs:
         TEST_RUNNER_EXTRA="--exclude feature_block"  # Not enough memory on travis machines
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_amd64_asan.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_amd64_fuzz.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
+      name: 'x86_64 Linux  [GOAL: install]  [focal]  [no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_amd64_nowallet.sh"
 
