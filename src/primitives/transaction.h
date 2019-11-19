@@ -6,8 +6,8 @@
 #ifndef BITCOIN_PRIMITIVES_TRANSACTION_H
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
-#include <stdint.h>
 #include <amount.h>
+#include <primitives/tx_types.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
@@ -175,8 +175,6 @@ public:
 
     std::string ToString() const;
 };
-
-struct CMutableTransaction;
 
 /**
  * Basic transaction serialization format:
@@ -405,7 +403,6 @@ struct CMutableTransaction
     }
 };
 
-typedef std::shared_ptr<const CTransaction> CTransactionRef;
 static inline CTransactionRef MakeTransactionRef() { return std::make_shared<const CTransaction>(); }
 template <typename Tx> static inline CTransactionRef MakeTransactionRef(Tx&& txIn) { return std::make_shared<const CTransaction>(std::forward<Tx>(txIn)); }
 

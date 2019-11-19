@@ -6,6 +6,8 @@
 #include <primitives/block.h>
 
 #include <hash.h>
+#include <primitives/transaction.h>
+
 #include <tinyformat.h>
 
 uint256 CBlockHeader::GetHash() const
