@@ -69,21 +69,22 @@ public:
 };
 
 
-class CBlock : public CBlockHeader
+template <typename TxRef>
+class Block : public CBlockHeader
 {
 public:
     // network and disk
-    std::vector<CTransactionRef> vtx;
+    std::vector<TxRef> vtx;
 
     // memory only
     mutable bool fChecked;
 
-    CBlock()
+    Block()
     {
         SetNull();
     }
 
-    CBlock(const CBlockHeader &header)
+    Block(const CBlockHeader& header)
     {
         SetNull();
         *(static_cast<CBlockHeader*>(this)) = header;

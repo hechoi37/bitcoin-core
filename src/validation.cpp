@@ -1134,7 +1134,8 @@ static bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessa
     return true;
 }
 
-bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams)
+template <typename Block>
+bool ReadBlockFromDisk(Block& block, const FlatFilePos& pos, const Consensus::Params& consensusParams)
 {
     block.SetNull();
 
@@ -1157,8 +1158,11 @@ bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::P
 
     return true;
 }
+template bool ReadBlockFromDisk<PureBlock>(PureBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams);
+template bool ReadBlockFromDisk<CBlock>(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams);
 
-bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+template <typename Block>
+bool ReadBlockFromDisk(Block& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
 {
     FlatFilePos blockPos;
     {
@@ -1173,6 +1177,8 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
                 pindex->ToString(), pindex->GetBlockPos().ToString());
     return true;
 }
+template bool ReadBlockFromDisk<PureBlock>(PureBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
+template bool ReadBlockFromDisk<CBlock>(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
 
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, const CMessageHeader::MessageStartChars& message_start)
 {

@@ -12,10 +12,21 @@
 
 class CTransaction;
 
-struct CMutableTransaction;
+template <bool WithHash>
+class Transaction;
 
+using PureTransaction = Transaction</* WithHash */ false>;
+using CMutableTransaction = Transaction</* WithHash */ true>;
+
+// Shared poiners to a transaction or the Block type are not defined for CMutableTransaction. They are only defined for
+// PureTransaction or CTransaction, so that the transaction hash is either not available or cached.
+using PureTransactionRef = std::shared_ptr<const PureTransaction>;
 using CTransactionRef = std::shared_ptr<const CTransaction>;
 
-class CBlock;
+template <typename TxRef>
+class Block;
+
+using PureBlock = Block<PureTransactionRef>;
+using CBlock = Block<CTransactionRef>;
 
 #endif // BITCOIN_PRIMITIVES_TX_TYPES_H
