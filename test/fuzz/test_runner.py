@@ -138,7 +138,6 @@ def run_once(*, corpus, test_list, build_dir, export_coverage):
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', t),
             '-runs=1',
-            '-detect_leaks=0',
             corpus_path,
         ]
         logging.debug('Run {} with args {}'.format(t, args))
