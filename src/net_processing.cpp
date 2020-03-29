@@ -50,12 +50,12 @@ static constexpr int64_t HEADERS_DOWNLOAD_TIMEOUT_PER_HEADER = 1000; // 1ms/head
 static constexpr int32_t MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT = 4;
 /** Timeout for (unprotected) outbound peers to sync to our chainwork, in seconds */
 static constexpr int64_t CHAIN_SYNC_TIMEOUT = 20 * 60; // 20 minutes
-/** How frequently to check for stale tips, in seconds */
-static constexpr int64_t STALE_CHECK_INTERVAL = 10 * 60; // 10 minutes
-/** How frequently to check for extra outbound peers and disconnect, in seconds */
-static constexpr int64_t EXTRA_PEER_CHECK_INTERVAL = 45;
-/** Minimum time an outbound-peer-eviction candidate must be connected for, in order to evict, in seconds */
-static constexpr int64_t MINIMUM_CONNECT_TIME = 30;
+/** How frequently to check for stale tips */
+static constexpr std::chrono::minutes STALE_CHECK_INTERVAL{10};
+/** How frequently to check for extra outbound peers and disconnect */
+static constexpr std::chrono::seconds EXTRA_PEER_CHECK_INTERVAL{45};
+/** Minimum time an outbound-peer-eviction candidate must be connected for, in order to evict */
+static constexpr std::chrono::seconds MINIMUM_CONNECT_TIME{30};
 /** SHA256("main address relay")[0:8] */
 static constexpr uint64_t RANDOMIZER_ID_ADDRESS_RELAY = 0x3cac0035b5866b90ULL;
 /// Age after which a stale block will no longer be served if requested as
@@ -177,7 +177,7 @@ namespace {
     int g_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
 
     /** When our tip was last updated. */
-    std::atomic<int64_t> g_last_tip_update(0);
+    std::atomic<std::chrono::seconds> g_last_tip_update{std::chrono::seconds{0}};
 
     /** Relay map */
     typedef std::map<uint256, CTransactionRef> MapRelay;
@@ -578,10 +578,10 @@ static void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman* connma
 static bool TipMayBeStale(const Consensus::Params &consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    if (g_last_tip_update == 0) {
-        g_last_tip_update = GetTime();
+    if (g_last_tip_update.load().count() == 0) {
+        g_last_tip_update = GetTime<std::chrono::seconds>();
     }
-    return g_last_tip_update < GetTime() - consensusParams.nPowTargetSpacing * 3 && mapBlocksInFlight.empty();
+    return g_last_tip_update.load() < GetTime<std::chrono::seconds>() - std::chrono::seconds{consensusParams.nPowTargetSpacing} * 3 && mapBlocksInFlight.empty();
 }
 
 static bool CanDirectFetch(const Consensus::Params &consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -758,6 +758,7 @@ void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
     LOCK(cs_main);
     CNodeState *state = State(node);
     if (state) state->m_last_block_announcement = time_in_seconds;
+    if (state) state->fHaveWitness = true;
 }
 
 // Returns true for outbound peers, excluding manual connections, feelers, and
@@ -1127,7 +1128,7 @@ PeerLogicValidation::PeerLogicValidation(CConnman* connmanIn, BanMan* banman, CS
     // combine them in one function and schedule at the quicker (peer-eviction)
     // timer.
     static_assert(EXTRA_PEER_CHECK_INTERVAL < STALE_CHECK_INTERVAL, "peer eviction timer should be less than stale tip check timer");
-    scheduler.scheduleEvery([this, consensusParams] { this->CheckForStaleTipAndEvictPeers(consensusParams); }, std::chrono::seconds{EXTRA_PEER_CHECK_INTERVAL});
+    scheduler.scheduleEvery([this, consensusParams] { this->CheckForStaleTipAndEvictPeers(consensusParams); }, EXTRA_PEER_CHECK_INTERVAL);
 }
 
 /**
@@ -1165,7 +1166,7 @@ void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pb
             LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx included or conflicted by block\n", nErased);
         }
 
-        g_last_tip_update = GetTime();
+        g_last_tip_update = GetTime<std::chrono::seconds>();
     }
     {
         LOCK(g_cs_recent_confirmed_transactions);
@@ -3430,7 +3431,7 @@ void PeerLogicValidation::ConsiderEviction(CNode *pto, int64_t time_in_seconds)
     }
 }
 
-void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
+void PeerLogicValidation::EvictExtraOutboundPeers(std::chrono::seconds time)
 {
     // Check whether we have too many outbound peers
     int extra_peers = connman->GetExtraOutboundCount();
@@ -3467,8 +3468,8 @@ void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
                 // it time for new information to have arrived.
                 // Also don't disconnect any peer we're trying to download a
                 // block from.
-                CNodeState &state = *State(pnode->GetId());
-                if (time_in_seconds - pnode->nTimeConnected > MINIMUM_CONNECT_TIME && state.nBlocksInFlight == 0) {
+                CNodeState& state = *State(pnode->GetId());
+                if (time - std::chrono::seconds{pnode->nTimeConnected} > MINIMUM_CONNECT_TIME && state.nBlocksInFlight == 0) {
                     LogPrint(BCLog::NET, "disconnecting extra outbound peer=%d (last block announcement received at time %d)\n", pnode->GetId(), oldest_block_announcement);
                     pnode->fDisconnect = true;
                     return true;
@@ -3495,20 +3496,20 @@ void PeerLogicValidation::CheckForStaleTipAndEvictPeers(const Consensus::Params 
 
     if (connman == nullptr) return;
 
-    int64_t time_in_seconds = GetTime();
+    const auto time = GetTime<std::chrono::seconds>();
 
-    EvictExtraOutboundPeers(time_in_seconds);
+    EvictExtraOutboundPeers(time);
 
-    if (time_in_seconds > m_stale_tip_check_time) {
+    if (time > m_stale_tip_check_time) {
         // Check whether our tip is stale, and if so, allow using an extra
         // outbound peer
         if (!fImporting && !fReindex && connman->GetNetworkActive() && connman->GetUseAddrmanOutgoing() && TipMayBeStale(consensusParams)) {
-            LogPrintf("Potential stale tip detected, will try using extra outbound peer (last tip update: %d seconds ago)\n", time_in_seconds - g_last_tip_update);
+            LogPrintf("Potential stale tip detected, will try using extra outbound peer (last tip update: %d seconds ago)\n", count_seconds(time - g_last_tip_update.load()));
             connman->SetTryNewOutboundPeer(true);
         } else if (connman->GetTryNewOutboundPeer()) {
             connman->SetTryNewOutboundPeer(false);
         }
-        m_stale_tip_check_time = time_in_seconds + STALE_CHECK_INTERVAL;
+        m_stale_tip_check_time = time + STALE_CHECK_INTERVAL;
     }
 }
 

@@ -11,6 +11,8 @@
 
 #include <stdexcept>
 
+void LogPrintTest(const std::string& info) { LogPrintf("[test] %s\n", info); }
+
 DebugLogHelper::DebugLogHelper(std::string message)
     : m_message{std::move(message)}
 {

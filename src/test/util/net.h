@@ -6,6 +6,7 @@
 #define BITCOIN_TEST_UTIL_NET_H
 
 #include <net.h>
+#include <netmessagemaker.h>
 
 struct ConnmanTestMsg : public CConnman {
     using CConnman::CConnman;
@@ -28,6 +29,15 @@ struct ConnmanTestMsg : public CConnman {
     void NodeReceiveMsgBytes(CNode& node, const char* pch, unsigned int nBytes, bool& complete) const;
 
     bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) const;
+
+    template <typename P>
+    void ReceiveMsgFrom(CNode& node, const std::string& type, const P& payload)
+    {
+        const CNetMsgMaker msg_maker(PROTOCOL_VERSION);
+        CSerializedNetMsg m_ser = msg_maker.Make(type.c_str(), payload);
+
+        assert(ReceiveMsgFrom(node, m_ser));
+    }
 };
 
 #endif // BITCOIN_TEST_UTIL_NET_H

@@ -22,15 +22,18 @@ CTxIn generatetoaddress(const NodeContext& node, const std::string& address)
     return MineBlock(node, coinbase_script);
 }
 
+void SolvePow(CBlock& block)
+{
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus())) {
+        ++block.nNonce;
+        assert(block.nNonce);
+    }
+}
+
 CTxIn MineBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
 {
     auto block = PrepareBlock(node, coinbase_scriptPubKey);
-
-    while (!CheckProofOfWork(block->GetHash(), block->nBits, Params().GetConsensus())) {
-        ++block->nNonce;
-        assert(block->nNonce);
-    }
-
+    SolvePow(*block);
     bool processed{ProcessNewBlock(Params(), block, true, nullptr)};
     assert(processed);
 

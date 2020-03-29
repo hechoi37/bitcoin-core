@@ -72,8 +72,10 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     SelectParams(chainName);
     SeedInsecureRand();
     gArgs.ForceSetArg("-printtoconsole", "0");
+    gArgs.ForceSetArg("-debug", "1");
     if (G_TEST_LOG_FUN) LogInstance().PushBackCallback(G_TEST_LOG_FUN);
     InitLogging();
+    AppInitParameterInteraction();
     LogInstance().StartLogging();
     SHA256AutoDetect();
     ECC_Start();

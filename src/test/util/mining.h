@@ -13,6 +13,9 @@ class CScript;
 class CTxIn;
 struct NodeContext;
 
+/** Work on the proof-of-work puzzle */
+void SolvePow(CBlock& block);
+
 /** Returns the generated coin */
 CTxIn MineBlock(const NodeContext&, const CScript& coinbase_scriptPubKey);
 

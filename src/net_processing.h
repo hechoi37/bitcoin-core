@@ -75,10 +75,10 @@ public:
     /** Evict extra outbound peers. If we think our tip may be stale, connect to an extra outbound */
     void CheckForStaleTipAndEvictPeers(const Consensus::Params &consensusParams);
     /** If we have extra outbound peers, try to disconnect the one with the oldest block announcement */
-    void EvictExtraOutboundPeers(int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void EvictExtraOutboundPeers(std::chrono::seconds time) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 private:
-    int64_t m_stale_tip_check_time; //!< Next time to check for stale tip
+    std::chrono::seconds m_stale_tip_check_time; //!< Next time to check for stale tip
 };
 
 struct CNodeStateStats {
