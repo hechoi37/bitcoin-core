@@ -548,6 +548,24 @@ std::string RPCHelpMan::ToString() const
     return ret;
 }
 
+void RPCHelpMan::AppendArgMap(UniValue& arr) const
+{
+    for (size_t i{0}; i < m_args.size(); ++i) {
+        const auto& arg = m_args.at(i);
+        std::vector<std::string> names;
+        boost::split(names, arg.m_names, boost::is_any_of("|"));
+        for (const auto& name : names) {
+            UniValue map{UniValue::VARR};
+            map.push_back(m_name);
+            map.push_back(i);
+            map.push_back(name);
+            map.push_back(arg.m_type == RPCArg::Type::STR ||
+                          arg.m_type == RPCArg::Type::STR_HEX);
+            arr.push_back(map);
+        }
+    }
+}
+
 std::string RPCArg::GetFirstName() const
 {
     return m_names.substr(0, m_names.find("|"));
