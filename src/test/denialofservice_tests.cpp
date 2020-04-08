@@ -12,34 +12,17 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <serialize.h>
+#include <test/util/net.h>
+#include <test/util/setup_common.h>
 #include <util/memory.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
 
-#include <test/util/setup_common.h>
-
 #include <stdint.h>
 
 #include <boost/test/unit_test.hpp>
-
-struct CConnmanTest : public CConnman {
-    using CConnman::CConnman;
-    void AddNode(CNode& node)
-    {
-        LOCK(cs_vNodes);
-        vNodes.push_back(&node);
-    }
-    void ClearNodes()
-    {
-        LOCK(cs_vNodes);
-        for (CNode* node : vNodes) {
-            delete node;
-        }
-        vNodes.clear();
-    }
-};
 
 // Tests these internal-to-net_processing.cpp methods:
 extern bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);
@@ -131,7 +114,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     peerLogic->FinalizeNode(dummyNode1.GetId(), dummy);
 }
 
-static void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerLogicValidation &peerLogic, CConnmanTest* connman)
+static void AddRandomOutboundPeer(std::vector<CNode*>& vNodes, PeerLogicValidation& peerLogic, ConnmanTestMsg& connman)
 {
     CAddress addr(ip(g_insecure_rand_ctx.randbits(32)), NODE_NONE);
     vNodes.emplace_back(new CNode(id++, ServiceFlags(NODE_NETWORK|NODE_WITNESS), 0, INVALID_SOCKET, addr, 0, 0, CAddress(), "", /*fInboundIn=*/ false));
@@ -142,12 +125,12 @@ static void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerLogicValidat
     node.nVersion = 1;
     node.fSuccessfullyConnected = true;
 
-    connman->AddNode(node);
+    connman.AddTestNode(node);
 }
 
 BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 {
-    auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
+    auto connman = MakeUnique<ConnmanTestMsg>(0x1337, 0x1337);
     auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), nullptr, *m_node.scheduler, *m_node.mempool);
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
@@ -161,8 +144,8 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     std::vector<CNode *> vNodes;
 
     // Mock some outbound peers
-    for (int i=0; i<max_outbound_full_relay; ++i) {
-        AddRandomOutboundPeer(vNodes, *peerLogic, connman.get());
+    for (int i = 0; i < max_outbound_full_relay; ++i) {
+        AddRandomOutboundPeer(vNodes, *peerLogic, *connman);
     }
 
     peerLogic->CheckForStaleTipAndEvictPeers(consensusParams);
@@ -187,7 +170,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     // If we add one more peer, something should get marked for eviction
     // on the next check (since we're mocking the time to be in the future, the
     // required time connected check should be satisfied).
-    AddRandomOutboundPeer(vNodes, *peerLogic, connman.get());
+    AddRandomOutboundPeer(vNodes, *peerLogic, *connman);
 
     peerLogic->CheckForStaleTipAndEvictPeers(consensusParams);
     for (int i=0; i<max_outbound_full_relay; ++i) {
@@ -214,7 +197,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
         peerLogic->FinalizeNode(node->GetId(), dummy);
     }
 
-    connman->ClearNodes();
+    connman->ClearTestNodes();
 }
 
 BOOST_AUTO_TEST_CASE(DoS_banning)
