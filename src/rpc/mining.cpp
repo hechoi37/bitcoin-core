@@ -101,9 +101,9 @@ static UniValue getnetworkhashps(const JSONRPCRequest& request)
     return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1);
 }
 
-static bool GenerateBlock(CBlock& block, uint64_t& max_tries, unsigned int& extra_nonce, uint256& block_hash)
+static bool GenerateBlock(CBlock& block, uint64_t& max_tries, unsigned int& extra_nonce, std::shared_ptr<const CBlock>& block_out)
 {
-    block_hash.SetNull();
+    block_out.reset();
 
     {
         LOCK(cs_main);
@@ -123,11 +123,11 @@ static bool GenerateBlock(CBlock& block, uint64_t& max_tries, unsigned int& extr
         return true;
     }
 
-    std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
-    if (!ProcessNewBlock(chainparams, shared_pblock, true, nullptr))
+    block_out = std::make_shared<const CBlock>(block);
+    if (!ProcessNewBlock(chainparams, block_out, true, nullptr)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+    }
 
-    block_hash = block.GetHash();
     return true;
 }
 
@@ -148,16 +148,15 @@ static UniValue generateBlocks(const CTxMemPool& mempool, const CScript& coinbas
         std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(mempool, Params()).CreateNewBlock(coinbase_script));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
-        CBlock *pblock = &pblocktemplate->block;
 
-        uint256 block_hash;
-        if (!GenerateBlock(*pblock, nMaxTries, nExtraNonce, block_hash)) {
+        std::shared_ptr<const CBlock> block_out;
+        if (!GenerateBlock(pblocktemplate->block, nMaxTries, nExtraNonce, block_out)) {
             break;
         }
 
-        if (!block_hash.IsNull()) {
+        if (block_out) {
             ++nHeight;
-            blockHashes.push_back(block_hash.GetHex());
+            blockHashes.push_back(block_out->GetHash().GetHex());
         }
     }
     return blockHashes;
@@ -366,16 +365,16 @@ static UniValue generateblock(const JSONRPCRequest& request)
         }
     }
 
-    uint256 block_hash;
+    std::shared_ptr<const CBlock> block_out;
     uint64_t max_tries{1000000};
     unsigned int extra_nonce{0};
 
-    if (!GenerateBlock(block, max_tries, extra_nonce, block_hash) || block_hash.IsNull()) {
+    if (!GenerateBlock(block, max_tries, extra_nonce, block_out) || !block_out) {
         throw JSONRPCError(RPC_MISC_ERROR, "Failed to make block.");
     }
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("hash", block_hash.GetHex());
+    obj.pushKV("hash", block_out->GetHash().GetHex());
     return obj;
 }
 
