@@ -6,6 +6,7 @@
 
 import hashlib
 import os
+import random
 import stat
 import subprocess
 import textwrap
@@ -29,6 +30,7 @@ class ToolWalletTest(BitcoinTestFramework):
     def bitcoin_wallet_process(self, *args):
         binary = self.config["environment"]["BUILDDIR"] + '/src/bitcoin-wallet' + self.config["environment"]["EXEEXT"]
         args = ['-datadir={}'.format(self.nodes[0].datadir), '-chain=%s' % self.chain] + list(args)
+        self.log.debug('Running wallet tool with args "{}"'.format('" "'.join(args)))
         return subprocess.Popen(
             [binary] + args,
             stdin=subprocess.PIPE,
@@ -224,11 +226,25 @@ class ToolWalletTest(BitcoinTestFramework):
     def test_salvage(self):
         # TODO: Check salvage actually salvages and doesn't break things. https://github.com/bitcoin/bitcoin/issues/7463
         self.log.info('Check salvage')
-        self.start_node(0)
+        self.start_node(0, ['-nowallet'])
         self.nodes[0].createwallet("salvage")
+        address_gen_rand = random.Random(123)
+
+        def gna():
+            return self.nodes[0].getnewaddress(address_type=address_gen_rand.choice(['legacy', 'p2sh-segwit', 'bech32']))
+
+        for _ in range(101):
+            # Generate to fresh address each time
+            self.nodes[0].generatetoaddress(1, gna())
+        self.nodes[0].sendmany(amounts={gna(): 0.05 for _ in range(50)})
+        self.nodes[0].sendmany(amounts={gna(): 0.05 for _ in range(50)})
+        balances_before = self.nodes[0].getbalances()
         self.stop_node(0)
 
         self.assert_tool_output('', '-wallet=salvage', 'salvage')
+
+        self.start_node(0, ['-nowallet', '-wallet=salvage'])
+        assert_equal(balances_before, self.nodes[0].getbalances())
 
     def run_test(self):
         self.wallet_path = os.path.join(self.nodes[0].datadir, self.chain, 'wallets', self.default_wallet_name, self.wallet_data_filename)
