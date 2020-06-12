@@ -500,7 +500,7 @@ std::string RPCHelpMan::ToString() const
         if (i == 0) ret += "\nArguments:\n";
 
         // Push named argument name and description
-        sections.m_sections.emplace_back(::ToString(i + 1) + ". " + arg.GetFirstName(), arg.ToDescriptionString());
+        sections.m_sections.emplace_back(::ToString(i + 1) + ". " + arg.GetFirstName(), arg.ToDescriptionString(/* is_top_level_arg */ true));
         sections.m_max_pad = std::max(sections.m_max_pad, sections.m_sections.back().m_left.size());
 
         // Recursively push nested args
@@ -537,7 +537,7 @@ bool RPCArg::IsOptional() const
     }
 }
 
-std::string RPCArg::ToDescriptionString() const
+std::string RPCArg::ToDescriptionString(const bool is_top_level_arg) const
 {
     std::string ret;
     ret += "(";
@@ -575,29 +575,25 @@ std::string RPCArg::ToDescriptionString() const
             ret += "json array";
             break;
         }
-
-            // no default case, so the compiler can warn about missing cases
-        }
+        } // no default case, so the compiler can warn about missing cases
     }
     if (m_fallback.which() == 1) {
         ret += ", optional, default=" + boost::get<std::string>(m_fallback);
     } else {
         switch (boost::get<RPCArg::Optional>(m_fallback)) {
         case RPCArg::Optional::OMITTED: {
+            if (is_top_level_arg) {
+                ret += ", optional"; // Default value is "null"
+            }
+            // else
             // nothing to do. Element is treated as if not present and has no default value
-            break;
-        }
-        case RPCArg::Optional::OMITTED_NAMED_ARG: {
-            ret += ", optional"; // Default value is "null"
             break;
         }
         case RPCArg::Optional::NO: {
             ret += ", required";
             break;
         }
-
-            // no default case, so the compiler can warn about missing cases
-        }
+        } // no default case, so the compiler can warn about missing cases
     }
     ret += ")";
     ret += m_description.empty() ? "" : " " + m_description;
