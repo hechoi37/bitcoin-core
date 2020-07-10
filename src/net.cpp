@@ -526,8 +526,8 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     } else {
         stats.fRelayTxes = false;
     }
-    X(nLastSend);
-    X(nLastRecv);
+    X(m_last_send);
+    X(m_last_recv);
     X(nTimeConnected);
     X(nTimeOffset);
     stats.addrName = GetAddrName();
@@ -585,7 +585,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
     complete = false;
     const auto time = GetTime<std::chrono::microseconds>();
     LOCK(cs_vRecv);
-    nLastRecv = std::chrono::duration_cast<std::chrono::seconds>(time).count();
+    m_last_recv = std::chrono::duration_cast<std::chrono::seconds>(time);
     nRecvBytes += nBytes;
     while (nBytes > 0) {
         // absorb network data
@@ -763,7 +763,7 @@ size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pno
             nBytes = send(pnode->hSocket, reinterpret_cast<const char*>(data.data()) + pnode->nSendOffset, data.size() - pnode->nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
         }
         if (nBytes > 0) {
-            pnode->nLastSend = GetSystemTimeInSeconds();
+            pnode->m_last_send = GetTime<std::chrono::seconds>();
             pnode->nSendBytes += nBytes;
             pnode->nSendOffset += nBytes;
             nSentSize += nBytes;
@@ -1142,25 +1142,27 @@ void CConnman::NotifyNumConnectionsChanged()
 
 void CConnman::InactivityCheck(CNode *pnode)
 {
-    int64_t nTime = GetSystemTimeInSeconds();
-    if (nTime - pnode->nTimeConnected > m_peer_connect_timeout)
+    const auto time = GetTime<std::chrono::seconds>();
+    const auto last_send = pnode->m_last_send.load();
+    const auto last_recv = pnode->m_last_recv.load();
+    if (time - std::chrono::seconds{pnode->nTimeConnected} > m_peer_connect_timeout)
     {
-        if (pnode->nLastRecv == 0 || pnode->nLastSend == 0)
+        if (last_recv.count() == 0 || last_send.count() == 0)
         {
-            LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d from %d\n", m_peer_connect_timeout, pnode->nLastRecv != 0, pnode->nLastSend != 0, pnode->GetId());
+            LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d from %d\n", count_seconds(m_peer_connect_timeout), last_recv.count() != 0, last_send.count() != 0, pnode->GetId());
             pnode->fDisconnect = true;
         }
-        else if (nTime - pnode->nLastSend > TIMEOUT_INTERVAL)
+        else if (time - last_send > TIMEOUT_INTERVAL)
         {
-            LogPrintf("socket sending timeout: %is\n", nTime - pnode->nLastSend);
+            LogPrintf("socket sending timeout: %is\n", count_seconds(time - last_send));
             pnode->fDisconnect = true;
         }
-        else if (nTime - pnode->nLastRecv > (pnode->nVersion > BIP0031_VERSION ? TIMEOUT_INTERVAL : 90*60))
+        else if (time - last_recv > (pnode->nVersion > BIP0031_VERSION ? TIMEOUT_INTERVAL : std::chrono::minutes{90}))
         {
-            LogPrintf("socket receive timeout: %is\n", nTime - pnode->nLastRecv);
+            LogPrintf("socket receive timeout: %is\n", count_seconds(time - last_recv));
             pnode->fDisconnect = true;
         }
-        else if (pnode->nPingNonceSent && pnode->m_ping_start.load() + std::chrono::seconds{TIMEOUT_INTERVAL} < GetTime<std::chrono::microseconds>())
+        else if (pnode->nPingNonceSent && pnode->m_ping_start.load() + TIMEOUT_INTERVAL < GetTime<std::chrono::microseconds>())
         {
             LogPrintf("ping timeout: %fs\n", 0.000001 * count_microseconds(GetTime<std::chrono::microseconds>() - pnode->m_ping_start.load()));
             pnode->fDisconnect = true;
