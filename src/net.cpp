@@ -1140,37 +1140,31 @@ void CConnman::NotifyNumConnectionsChanged()
     }
 }
 
-void CConnman::InactivityCheck(CNode *pnode)
+void CConnman::InactivityCheck(CNode& node)
 {
     const auto time = GetTime<std::chrono::seconds>();
-    const auto last_send = pnode->m_last_send.load();
-    const auto last_recv = pnode->m_last_recv.load();
-    if (time - std::chrono::seconds{pnode->nTimeConnected} > m_peer_connect_timeout)
-    {
-        if (last_recv.count() == 0 || last_send.count() == 0)
-        {
-            LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d from %d\n", count_seconds(m_peer_connect_timeout), last_recv.count() != 0, last_send.count() != 0, pnode->GetId());
-            pnode->fDisconnect = true;
-        }
-        else if (time - last_send > TIMEOUT_INTERVAL)
-        {
+    const auto last_send = node.m_last_send.load();
+    const auto last_recv = node.m_last_recv.load();
+    if (time - std::chrono::seconds{node.nTimeConnected} > m_peer_connect_timeout) {
+        if (last_recv.count() == 0 || last_send.count() == 0) {
+            LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d from %d\n",
+                     count_seconds(m_peer_connect_timeout),
+                     last_recv.count() != 0,
+                     last_send.count() != 0,
+                     node.GetId());
+            node.fDisconnect = true;
+        } else if (time - last_send > TIMEOUT_INTERVAL) {
             LogPrintf("socket sending timeout: %is\n", count_seconds(time - last_send));
-            pnode->fDisconnect = true;
-        }
-        else if (time - last_recv > (pnode->nVersion > BIP0031_VERSION ? TIMEOUT_INTERVAL : std::chrono::minutes{90}))
-        {
+            node.fDisconnect = true;
+        } else if (time - last_recv > (node.nVersion > BIP0031_VERSION ? TIMEOUT_INTERVAL : std::chrono::minutes{90})) {
             LogPrintf("socket receive timeout: %is\n", count_seconds(time - last_recv));
-            pnode->fDisconnect = true;
-        }
-        else if (pnode->nPingNonceSent && pnode->m_ping_start.load() + TIMEOUT_INTERVAL < GetTime<std::chrono::microseconds>())
-        {
-            LogPrintf("ping timeout: %fs\n", 0.000001 * count_microseconds(GetTime<std::chrono::microseconds>() - pnode->m_ping_start.load()));
-            pnode->fDisconnect = true;
-        }
-        else if (!pnode->fSuccessfullyConnected)
-        {
-            LogPrint(BCLog::NET, "version handshake timeout from %d\n", pnode->GetId());
-            pnode->fDisconnect = true;
+            node.fDisconnect = true;
+        } else if (node.nPingNonceSent && node.m_ping_start.load() + TIMEOUT_INTERVAL < GetTime<std::chrono::microseconds>()) {
+            LogPrintf("ping timeout: %fs\n", 0.000001 * count_microseconds(GetTime<std::chrono::microseconds>() - node.m_ping_start.load()));
+            node.fDisconnect = true;
+        } else if (!node.fSuccessfullyConnected) {
+            LogPrint(BCLog::NET, "version handshake timeout from %d\n", node.GetId());
+            node.fDisconnect = true;
         }
     }
 }
@@ -1454,7 +1448,7 @@ void CConnman::SocketHandler()
             }
         }
 
-        InactivityCheck(pnode);
+        InactivityCheck(*pnode);
     }
     {
         LOCK(cs_vNodes);
