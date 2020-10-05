@@ -2366,7 +2366,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         // Each connection can only send one version message
         if (pfrom.nVersion != 0)
         {
-            Misbehaving(pfrom.GetId(), 1, "redundant version message");
+            LogPrint(BCLog::NET, "redundant version message from peer=%d\n", pfrom.GetId());
             return;
         }
 
