@@ -111,6 +111,7 @@ BASE_SCRIPTS = [
     'wallet_listtransactions.py',
     'wallet_listtransactions.py --descriptors',
     'feature_taproot.py',
+    'feature_taproot.py --previous_release',
     # vv Tests less than 60s vv
     'p2p_sendheaders.py',
     'wallet_importmulti.py --legacy-wallet',
