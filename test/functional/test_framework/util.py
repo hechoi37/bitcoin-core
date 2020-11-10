@@ -529,6 +529,7 @@ def find_vout_for_address(node, txid, addr):
             return i
     raise RuntimeError("Vout not found for address: txid=%s, addr=%s" % (txid, addr))
 
+
 def modinv(a, n):
     """Compute the modular inverse of a modulo n using the extended Euclidean
     Algorithm. See https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Modular_integers.
@@ -546,6 +547,7 @@ def modinv(a, n):
         t1 += n
     return t1
 
+
 class TestFrameworkUtil(unittest.TestCase):
     def test_modinv(self):
         test_vectors = [
@@ -557,4 +559,4 @@ class TestFrameworkUtil(unittest.TestCase):
         ]
 
         for a, n in test_vectors:
-            self.assertEqual(modinv(a, n), pow(a, n-2, n))
+            self.assertEqual(modinv(a, n), pow(a, n - 2, n))

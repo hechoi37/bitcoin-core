@@ -11,11 +11,13 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
+
 def reset_balance(node, discardaddr):
     '''Throw away all owned coins by the node so it gets a balance of 0.'''
     balance = node.getbalance(avoid_reuse=False)
     if balance > 0.5:
         node.sendtoaddress(address=discardaddr, amount=balance, subtractfeefromamount=True, avoid_reuse=False)
+
 
 def count_unspent(node):
     '''Count the unspent outputs for the given node and return various statistics'''
@@ -42,6 +44,7 @@ def count_unspent(node):
     r["reused"]["supported"] = supports_reused
     return r
 
+
 def assert_unspent(node, total_count=None, total_sum=None, reused_supported=None, reused_count=None, reused_sum=None):
     '''Make assertions about a node's unspent output statistics'''
     stats = count_unspent(node)
@@ -56,14 +59,15 @@ def assert_unspent(node, total_count=None, total_sum=None, reused_supported=None
     if reused_sum is not None:
         assert_approx(stats["reused"]["sum"], reused_sum, 0.001)
 
+
 def assert_balances(node, mine):
     '''Make assertions about a node's getbalances output'''
     got = node.getbalances()["mine"]
-    for k,v in mine.items():
+    for k, v in mine.items():
         assert_approx(got[k], v, 0.001)
 
-class AvoidReuseTest(BitcoinTestFramework):
 
+class AvoidReuseTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 2
@@ -181,7 +185,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         # getbalances should show no used, 10 btc trusted
         assert_balances(self.nodes[1], mine={"used": 0, "trusted": 10})
         # node 0 should not show a used entry, as it does not enable avoid_reuse
-        assert("used" not in self.nodes[0].getbalances()["mine"])
+        assert "used" not in self.nodes[0].getbalances()["mine"]
 
         self.nodes[1].sendtoaddress(retaddr, 5)
         self.nodes[0].generate(1)

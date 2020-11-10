@@ -23,6 +23,7 @@ MAX_ANCESTORS_CUSTOM = 5
 MAX_DESCENDANTS_CUSTOM = 10
 assert MAX_DESCENDANTS_CUSTOM >= MAX_ANCESTORS_CUSTOM
 
+
 class MempoolPackagesTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
@@ -44,8 +45,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
     # Build a transaction that spends parent_txid:vout
     # Return amount sent
     def chain_transaction(self, node, parent_txid, vout, value, fee, num_outputs):
-        send_value = satoshi_round((value - fee)/num_outputs)
-        inputs = [ {'txid' : parent_txid, 'vout' : vout} ]
+        send_value = satoshi_round((value - fee) / num_outputs)
+        inputs = [{'txid': parent_txid, 'vout': vout}]
         outputs = {}
         for _ in range(num_outputs):
             outputs[node.getnewaddress()] = send_value
@@ -58,7 +59,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
     def run_test(self):
         # Mine some blocks and have them mature.
-        peer_inv_store = self.nodes[0].add_p2p_connection(P2PTxInvStore()) # keep track of invs
+        peer_inv_store = self.nodes[0].add_p2p_connection(P2PTxInvStore())  # keep track of invs
         self.nodes[0].generate(101)
         utxo = self.nodes[0].listunspent(10)
         txid = utxo[0]['txid']
@@ -130,9 +131,9 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
             # Check getmempooldescendants verbose output is correct
             for descendant, dinfo in self.nodes[0].getmempooldescendants(x, True).items():
-                assert_equal(dinfo['depends'], [chain[chain.index(descendant)-1]])
+                assert_equal(dinfo['depends'], [chain[chain.index(descendant) - 1]])
                 if dinfo['descendantcount'] > 1:
-                    assert_equal(dinfo['spentby'], [chain[chain.index(descendant)+1]])
+                    assert_equal(dinfo['spentby'], [chain[chain.index(descendant) + 1]])
                 else:
                     assert_equal(dinfo['spentby'], [])
             descendants.append(x)
@@ -143,22 +144,21 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
             # Check that getmempoolancestors verbose output is correct
             for ancestor, ainfo in self.nodes[0].getmempoolancestors(x, True).items():
-                assert_equal(ainfo['spentby'], [chain[chain.index(ancestor)+1]])
+                assert_equal(ainfo['spentby'], [chain[chain.index(ancestor) + 1]])
                 if ainfo['ancestorcount'] > 1:
-                    assert_equal(ainfo['depends'], [chain[chain.index(ancestor)-1]])
+                    assert_equal(ainfo['depends'], [chain[chain.index(ancestor) - 1]])
                 else:
                     assert_equal(ainfo['depends'], [])
 
-
         # Check that getmempoolancestors/getmempooldescendants correctly handle verbose=true
         v_ancestors = self.nodes[0].getmempoolancestors(chain[-1], True)
-        assert_equal(len(v_ancestors), len(chain)-1)
+        assert_equal(len(v_ancestors), len(chain) - 1)
         for x in v_ancestors.keys():
             assert_equal(mempool[x], v_ancestors[x])
         assert chain[-1] not in v_ancestors.keys()
 
         v_descendants = self.nodes[0].getmempooldescendants(chain[0], True)
-        assert_equal(len(v_descendants), len(chain)-1)
+        assert_equal(len(v_descendants), len(chain) - 1)
         for x in v_descendants.keys():
             assert_equal(mempool[x], v_descendants[x])
         assert chain[0] not in v_descendants.keys()
@@ -208,10 +208,10 @@ class MempoolPackagesTest(BitcoinTestFramework):
         for x in reversed(chain):
             descendant_fees += mempool[x]['fee']
             if (x == chain[-1]):
-                assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee']+satoshi_round(0.00002))
-                assert_equal(mempool[x]['fees']['modified'], mempool[x]['fee']+satoshi_round(0.00002))
+                assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee'] + satoshi_round(0.00002))
+                assert_equal(mempool[x]['fees']['modified'], mempool[x]['fee'] + satoshi_round(0.00002))
             assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN + 2000)
-            assert_equal(mempool[x]['fees']['descendant'], descendant_fees+satoshi_round(0.00002))
+            assert_equal(mempool[x]['fees']['descendant'], descendant_fees + satoshi_round(0.00002))
 
         # Check that node1's mempool is as expected (-> custom ancestor limit)
         mempool0 = self.nodes[0].getrawmempool(False)
@@ -242,7 +242,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
             transaction_package.append({'txid': txid, 'vout': i, 'amount': sent_value})
 
         # Sign and send up to MAX_DESCENDANT transactions chained off the parent tx
-        chain = [] # save sent txs for the purpose of checking node1's mempool later (see below)
+        chain = []  # save sent txs for the purpose of checking node1's mempool later (see below)
         for _ in range(MAX_DESCENDANTS - 1):
             utxo = transaction_package.pop(0)
             (txid, sent_value) = self.chain_transaction(self.nodes[0], utxo['txid'], utxo['vout'], utxo['amount'], fee, 10)
@@ -306,8 +306,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
         value = utxo[0]['amount']
         vout = utxo[0]['vout']
 
-        send_value = satoshi_round((value - fee)/2)
-        inputs = [ {'txid' : txid, 'vout' : vout} ]
+        send_value = satoshi_round((value - fee) / 2)
+        inputs = [{'txid': txid, 'vout': vout}]
         outputs = {}
         for _ in range(2):
             outputs[self.nodes[0].getnewaddress()] = send_value
@@ -332,8 +332,8 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
 
         # Now generate tx8, with a big fee
-        inputs = [ {'txid' : tx1_id, 'vout': 0}, {'txid' : txid, 'vout': 0} ]
-        outputs = { self.nodes[0].getnewaddress() : send_value + value - 4*fee }
+        inputs = [{'txid': tx1_id, 'vout': 0}, {'txid': txid, 'vout': 0}]
+        outputs = {self.nodes[0].getnewaddress(): send_value + value - 4 * fee}
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
         txid = self.nodes[0].sendrawtransaction(signedtx['hex'])
@@ -343,6 +343,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.nodes[1].invalidateblock(self.nodes[1].getbestblockhash())
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         self.sync_blocks()
+
 
 if __name__ == '__main__':
     MempoolPackagesTest().main()

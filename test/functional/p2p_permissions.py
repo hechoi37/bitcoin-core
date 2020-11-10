@@ -158,14 +158,14 @@ class P2PPermissionsTests(BitcoinTestFramework):
             [tx],
             self.nodes[1],
             success=False,
-            reject_reason='{} from peer=0 was not accepted: txn-mempool-conflict'.format(txid)
+            reject_reason='{} from peer=0 was not accepted: txn-mempool-conflict'.format(txid),
         )
 
         p2p_rebroadcast_wallet.send_txs_and_test(
             [tx],
             self.nodes[1],
             success=False,
-            reject_reason='Not relaying non-mempool transaction {} from forcerelay peer=0'.format(txid)
+            reject_reason='Not relaying non-mempool transaction {} from forcerelay peer=0'.format(txid),
         )
 
     def checkpermission(self, args, expectedPermissions, whitelisted):

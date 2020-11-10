@@ -37,12 +37,12 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.num_nodes = 6
         # Add new version after each release:
         self.extra_args = [
-            ["-addresstype=bech32"], # Pre-release: use to mine blocks
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # Pre-release: use to receive coins, swap wallets, etc
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.19.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.18.1
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.17.2
-            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-wallet=wallet.dat"], # v0.16.3
+            ["-addresstype=bech32"],  # Pre-release: use to mine blocks
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"],  # Pre-release: use to receive coins, swap wallets, etc
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"],  # v0.19.1
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"],  # v0.18.1
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"],  # v0.17.2
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32", "-wallet=wallet.dat"],  # v0.16.3
         ]
         self.wallet_names = [self.default_wallet_name]
 
@@ -183,33 +183,33 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         for wallet in os.listdir(node_master_wallets_dir):
             shutil.copytree(
                 os.path.join(node_master_wallets_dir, wallet),
-                os.path.join(node_v16_wallets_dir, wallet)
+                os.path.join(node_v16_wallets_dir, wallet),
             )
 
         # Copy wallets to v0.17
         for wallet in os.listdir(node_master_wallets_dir):
             shutil.copytree(
                 os.path.join(node_master_wallets_dir, wallet),
-                os.path.join(node_v17_wallets_dir, wallet)
+                os.path.join(node_v17_wallets_dir, wallet),
             )
         for wallet in os.listdir(node_v18_wallets_dir):
             shutil.copytree(
                 os.path.join(node_v18_wallets_dir, wallet),
-                os.path.join(node_v17_wallets_dir, wallet)
+                os.path.join(node_v17_wallets_dir, wallet),
             )
 
         # Copy wallets to v0.18
         for wallet in os.listdir(node_master_wallets_dir):
             shutil.copytree(
                 os.path.join(node_master_wallets_dir, wallet),
-                os.path.join(node_v18_wallets_dir, wallet)
+                os.path.join(node_v18_wallets_dir, wallet),
             )
 
         # Copy wallets to v0.19
         for wallet in os.listdir(node_master_wallets_dir):
             shutil.copytree(
                 os.path.join(node_master_wallets_dir, wallet),
-                os.path.join(node_v19_wallets_dir, wallet)
+                os.path.join(node_v19_wallets_dir, wallet),
             )
 
         if not self.options.descriptors:
@@ -225,13 +225,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             assert_equal(txs[1]["txid"], tx1_id)
             assert_equal(txs[2]["walletconflicts"], [tx1_id])
             assert_equal(txs[1]["replaced_by_txid"], tx2_id)
-            assert not(txs[1]["abandoned"])
+            assert not txs[1]["abandoned"]
             assert_equal(txs[1]["confirmations"], -1)
             assert_equal(txs[2]["blockindex"], 1)
             assert txs[3]["abandoned"]
             assert_equal(txs[4]["walletconflicts"], [tx3_id])
             assert_equal(txs[3]["replaced_by_txid"], tx4_id)
-            assert not(hasattr(txs[3], "blockindex"))
+            assert not hasattr(txs[3], "blockindex")
 
             node_v19.loadwallet("w2")
             wallet = node_v19.get_wallet_rpc("w2")
@@ -256,13 +256,13 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
             assert_equal(txs[1]["txid"], tx1_id)
             assert_equal(txs[2]["walletconflicts"], [tx1_id])
             assert_equal(txs[1]["replaced_by_txid"], tx2_id)
-            assert not(txs[1]["abandoned"])
+            assert not txs[1]["abandoned"]
             assert_equal(txs[1]["confirmations"], -1)
             assert_equal(txs[2]["blockindex"], 1)
             assert txs[3]["abandoned"]
             assert_equal(txs[4]["walletconflicts"], [tx3_id])
             assert_equal(txs[3]["replaced_by_txid"], tx4_id)
-            assert not(hasattr(txs[3], "blockindex"))
+            assert not hasattr(txs[3], "blockindex")
 
             node_v18.loadwallet("w2")
             wallet = node_v18.get_wallet_rpc("w2")
@@ -353,7 +353,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # Copy the 0.16 wallet to the last Bitcoin Core version and open it:
         shutil.copyfile(
             os.path.join(node_v16_wallets_dir, "wallets/u1_v16"),
-            os.path.join(node_master_wallets_dir, "u1_v16")
+            os.path.join(node_master_wallets_dir, "u1_v16"),
         )
         load_res = node_master.loadwallet("u1_v16")
         # Make sure this wallet opens without warnings. See https://github.com/bitcoin/bitcoin/pull/19054
@@ -367,7 +367,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         os.remove(os.path.join(node_v16_wallets_dir, "wallets/u1_v16"))
         shutil.copyfile(
             os.path.join(node_master_wallets_dir, "u1_v16"),
-            os.path.join(node_v16_wallets_dir, "wallets/u1_v16")
+            os.path.join(node_v16_wallets_dir, "wallets/u1_v16"),
         )
         self.start_node(-1, extra_args=["-wallet=u1_v16"])
         wallet = node_v16.get_wallet_rpc("u1_v16")
@@ -378,7 +378,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         node_v17.unloadwallet("u1_v17")
         shutil.copytree(
             os.path.join(node_v17_wallets_dir, "u1_v17"),
-            os.path.join(node_master_wallets_dir, "u1_v17")
+            os.path.join(node_master_wallets_dir, "u1_v17"),
         )
         node_master.loadwallet("u1_v17")
         wallet = node_master.get_wallet_rpc("u1_v17")
@@ -391,7 +391,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         shutil.rmtree(os.path.join(node_v17_wallets_dir, "u1_v17"))
         shutil.copytree(
             os.path.join(node_master_wallets_dir, "u1_v17"),
-            os.path.join(node_v17_wallets_dir, "u1_v17")
+            os.path.join(node_v17_wallets_dir, "u1_v17"),
         )
         node_v17.loadwallet("u1_v17")
         wallet = node_v17.get_wallet_rpc("u1_v17")
@@ -401,7 +401,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         # Copy the 0.19 wallet to the last Bitcoin Core version and open it:
         shutil.copytree(
             os.path.join(node_v19_wallets_dir, "w1_v19"),
-            os.path.join(node_master_wallets_dir, "w1_v19")
+            os.path.join(node_master_wallets_dir, "w1_v19"),
         )
         node_master.loadwallet("w1_v19")
         wallet = node_master.get_wallet_rpc("w1_v19")
@@ -412,11 +412,12 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         shutil.rmtree(os.path.join(node_v19_wallets_dir, "w1_v19"))
         shutil.copytree(
             os.path.join(node_master_wallets_dir, "w1_v19"),
-            os.path.join(node_v19_wallets_dir, "w1_v19")
+            os.path.join(node_v19_wallets_dir, "w1_v19"),
         )
         node_v19.loadwallet("w1_v19")
         wallet = node_v19.get_wallet_rpc("w1_v19")
         assert wallet.getaddressinfo(address_18075)["solvable"]
+
 
 if __name__ == '__main__':
     BackwardsCompatibilityTest().main()

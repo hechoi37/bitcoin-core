@@ -162,5 +162,6 @@ class ReceivedByTest(BitcoinTestFramework):
         balance = self.nodes[1].getreceivedbylabel("mynewlabel")
         assert_equal(balance, Decimal("0.0"))
 
+
 if __name__ == '__main__':
     ReceivedByTest().main()

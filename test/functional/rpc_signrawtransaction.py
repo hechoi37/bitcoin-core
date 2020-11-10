@@ -15,6 +15,7 @@ from test_framework.wallet_util import bytes_to_wif
 
 from decimal import Decimal
 
+
 class SignRawTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True

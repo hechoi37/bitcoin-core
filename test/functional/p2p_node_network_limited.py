@@ -18,18 +18,23 @@ from test_framework.util import (
 
 class P2PIgnoreInv(P2PInterface):
     firstAddrnServices = 0
+
     def on_inv(self, message):
         # The node will send us invs for other blocks. Ignore them.
         pass
+
     def on_addr(self, message):
         self.firstAddrnServices = message.addrs[0].nServices
+
     def wait_for_addr(self, timeout=5):
         test_function = lambda: self.last_message.get("addr")
         self.wait_until(test_function, timeout=timeout)
+
     def send_getdata_for_block(self, blockhash):
         getdata_request = msg_getdata()
         getdata_request.inv.append(CInv(MSG_BLOCK, int(blockhash, 16)))
         self.send_message(getdata_request)
+
 
 class NodeNetworkLimitedTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -108,6 +113,7 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
 
         # sync must be possible, node 1 is no longer in IBD and should therefore connect to node 0 (NODE_NETWORK_LIMITED)
         self.sync_blocks([self.nodes[0], self.nodes[1]])
+
 
 if __name__ == '__main__':
     NodeNetworkLimitedTest().main()

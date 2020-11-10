@@ -135,13 +135,13 @@ class WalletTest(BitcoinTestFramework):
         # The lock on a manually selected output is ignored
         unspent_0 = self.nodes[1].listunspent()[0]
         self.nodes[1].lockunspent(False, [unspent_0])
-        tx = self.nodes[1].createrawtransaction([unspent_0], { self.nodes[1].getnewaddress() : 1 })
-        self.nodes[1].fundrawtransaction(tx,{"lockUnspents": True})
+        tx = self.nodes[1].createrawtransaction([unspent_0], {self.nodes[1].getnewaddress(): 1})
+        self.nodes[1].fundrawtransaction(tx, {"lockUnspents": True})
 
         # fundrawtransaction can lock an input
         self.nodes[1].lockunspent(True, [unspent_0])
         assert_equal(len(self.nodes[1].listlockunspent()), 0)
-        tx = self.nodes[1].fundrawtransaction(tx,{"lockUnspents": True})['hex']
+        tx = self.nodes[1].fundrawtransaction(tx, {"lockUnspents": True})['hex']
         assert_equal(len(self.nodes[1].listlockunspent()), 1)
 
         # Send transaction
@@ -234,7 +234,7 @@ class WalletTest(BitcoinTestFramework):
         fee_per_kb = 0.0002500
         explicit_fee_per_byte = Decimal(fee_per_kb) / 1000
         txid = self.nodes[2].sendmany(
-            amounts={ address: 10 },
+            amounts={address: 10},
             conf_target=fee_per_kb,
             estimate_mode='bTc/kB',
         )
@@ -260,7 +260,7 @@ class WalletTest(BitcoinTestFramework):
         fee_per_kb = fee_sat_per_b / 100000.0
         explicit_fee_per_byte = Decimal(fee_per_kb) / 1000
         txid = self.nodes[2].sendmany(
-            amounts={ address: 10 },
+            amounts={address: 10},
             conf_target=fee_sat_per_b,
             estimate_mode='sAT/b',
         )

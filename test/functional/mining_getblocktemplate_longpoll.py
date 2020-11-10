@@ -26,6 +26,7 @@ class LongpollThread(threading.Thread):
     def run(self):
         self.node.getblocktemplate({'longpollid': self.longpollid, 'rules': ['segwit']})
 
+
 class GetBlockTemplateLPTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
@@ -47,7 +48,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         thr.join(5)  # wait 5 seconds or until thread exits
         assert thr.is_alive()
 
-        miniwallets = [ MiniWallet(node) for node in self.nodes ]
+        miniwallets = [MiniWallet(node) for node in self.nodes]
         self.log.info("Test that longpoll will terminate if another node generates a block")
         miniwallets[1].generate(1)  # generate a block on another node
         # check that thread will exit now that new transaction entered mempool
@@ -69,12 +70,13 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         thr.start()
         # generate a random transaction and submit it
         min_relay_fee = self.nodes[0].getnetworkinfo()["relayfee"]
-        fee_rate = min_relay_fee + Decimal('0.00000010') * random.randint(0,20)
+        fee_rate = min_relay_fee + Decimal('0.00000010') * random.randint(0, 20)
         miniwallets[0].send_self_transfer(from_node=random.choice(self.nodes),
                                           fee_rate=fee_rate)
         # after one minute, every 10 seconds the mempool is probed, so in 80 seconds it should have returned
         thr.join(60 + 20)
         assert not thr.is_alive()
+
 
 if __name__ == '__main__':
     GetBlockTemplateLPTest().main()

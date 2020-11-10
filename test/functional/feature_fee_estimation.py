@@ -41,7 +41,7 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
     # It's best to exponentially distribute our random fees
     # because the buckets are exponentially spaced.
     # Exponentially distributed from 1-128 * fee_increment
-    rand_fee = float(fee_increment) * (1.1892 ** random.randint(0, 28))
+    rand_fee = float(fee_increment) * (1.1892**random.randint(0, 28))
     # Total fee ranges from min_fee to min_fee + 127*fee_increment
     fee = min_fee - fee_increment + satoshi_round(rand_fee)
     tx = CTransaction()
@@ -98,6 +98,7 @@ def split_inputs(from_node, txins, txouts, initial_split=False):
     txouts.append({"txid": txid, "vout": 0, "amount": half_change})
     txouts.append({"txid": txid, "vout": 1, "amount": rem_change})
 
+
 def check_raw_estimates(node, fees_seen):
     """Call estimaterawfee and verify that the estimates meet certain invariants."""
 
@@ -134,9 +135,11 @@ def check_smart_estimates(node, fees_seen):
         else:
             assert_greater_than_or_equal(i + 1, e["blocks"])
 
+
 def check_estimates(node, fees_seen):
     check_raw_estimates(node, fees_seen)
     check_smart_estimates(node, fees_seen)
+
 
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):

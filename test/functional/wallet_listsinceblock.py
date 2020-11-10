@@ -17,6 +17,7 @@ from test_framework.wallet_util import bytes_to_wif
 
 from decimal import Decimal
 
+
 class ListSinceBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
@@ -370,6 +371,7 @@ class ListSinceBlockTest(BitcoinTestFramework):
                 double_found = True
         assert_equal(original_found, False)
         assert_equal(double_found, False)
+
 
 if __name__ == '__main__':
     ListSinceBlockTest().main()

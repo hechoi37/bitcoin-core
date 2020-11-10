@@ -14,7 +14,8 @@ from test_framework.util import (
     create_confirmed_utxos,
 )
 
-MAX_INITIAL_BROADCAST_DELAY = 15 * 60 # 15 minutes in seconds
+MAX_INITIAL_BROADCAST_DELAY = 15 * 60  # 15 minutes in seconds
+
 
 class MempoolUnbroadcastTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -86,7 +87,7 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
 
         conn = node.add_p2p_connection(P2PTxInvStore())
         node.mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
-        time.sleep(2) # allow sufficient time for possibility of broadcast
+        time.sleep(2)  # allow sufficient time for possibility of broadcast
         assert_equal(len(conn.get_invs()), 0)
 
         self.disconnect_nodes(0, 1)

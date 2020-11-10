@@ -64,6 +64,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
+
 class AddressTypeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 6
@@ -159,7 +160,7 @@ class AddressTypeTest(BitcoinTestFramework):
         # Use a ridiculously roundabout way to find the key origin info through
         # the PSBT logic. However, this does test consistency between the PSBT reported
         # fingerprints/paths and the descriptor logic.
-        psbt = self.nodes[node].createpsbt([{'txid':utxo['txid'], 'vout':utxo['vout']}],[{address:0.00010000}])
+        psbt = self.nodes[node].createpsbt([{'txid': utxo['txid'], 'vout': utxo['vout']}], [{address: 0.00010000}])
         psbt = self.nodes[node].walletprocesspsbt(psbt, False, "ALL", True)
         decode = self.nodes[node].decodepsbt(psbt['psbt'])
         key_descs = {}
@@ -368,6 +369,7 @@ class AddressTypeTest(BitcoinTestFramework):
         self.log.info("Except for getrawchangeaddress if specified:")
         self.test_address(4, self.nodes[4].getrawchangeaddress(), multisig=False, typ='p2sh-segwit')
         self.test_address(4, self.nodes[4].getrawchangeaddress('bech32'), multisig=False, typ='bech32')
+
 
 if __name__ == '__main__':
     AddressTypeTest().main()

@@ -25,6 +25,7 @@ from test_framework.util import (
 # compatible with pruning based on key creation time.
 TIMESTAMP_WINDOW = 2 * 60 * 60
 
+
 def mine_large_blocks(node, n):
     # Make a large scriptPubKey for the coinbase transaction. This is OP_RETURN
     # followed by 950k of OP_NOP. This would be non-standard in a non-coinbase
@@ -46,7 +47,7 @@ def mine_large_blocks(node, n):
     for _ in range(n):
         # Build the coinbase transaction (with large scriptPubKey)
         coinbase_tx = create_coinbase(height)
-        coinbase_tx.vin[0].nSequence = 2 ** 32 - 1
+        coinbase_tx.vin[0].nSequence = 2**32 - 1
         coinbase_tx.vout[0].scriptPubKey = big_script
         coinbase_tx.rehash()
 
@@ -68,8 +69,10 @@ def mine_large_blocks(node, n):
         height += 1
         mine_large_blocks.nTime += 1
 
+
 def calc_usage(blockdir):
     return sum(os.path.getsize(blockdir + f) for f in os.listdir(blockdir) if os.path.isfile(os.path.join(blockdir, f))) / (1024. * 1024.)
+
 
 class PruneTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -336,7 +339,7 @@ class PruneTest(BitcoinTestFramework):
         self.connect_nodes(0, 5)
         nds = [self.nodes[0], self.nodes[5]]
         self.sync_blocks(nds, wait=5, timeout=300)
-        self.restart_node(5, extra_args=["-prune=550"]) # restart to trigger rescan
+        self.restart_node(5, extra_args=["-prune=550"])  # restart to trigger rescan
         self.log.info("Success")
 
     def run_test(self):
@@ -449,6 +452,7 @@ class PruneTest(BitcoinTestFramework):
         self.wallet_test()
 
         self.log.info("Done")
+
 
 if __name__ == '__main__':
     PruneTest().main()

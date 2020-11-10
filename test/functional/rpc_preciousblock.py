@@ -24,12 +24,14 @@ def unidirectional_node_sync_via_rpc(node_src, node_dest):
         blockdata = node_src.getblock(blockhash, False)
         assert node_dest.submitblock(blockdata) in (None, 'inconclusive')
 
+
 def node_sync_via_rpc(nodes):
     for node_src in nodes:
         for node_dest in nodes:
             if node_src is node_dest:
                 continue
             unidirectional_node_sync_via_rpc(node_src, node_dest)
+
 
 class PreciousTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -108,6 +110,7 @@ class PreciousTest(BitcoinTestFramework):
         self.log.info("Make Node2 prefer block H")
         self.nodes[2].preciousblock(hashH)
         assert_equal(self.nodes[2].getbestblockhash(), hashH)
+
 
 if __name__ == '__main__':
     PreciousTest().main()

@@ -82,8 +82,8 @@ class MempoolPersistTest(BitcoinTestFramework):
 
         # disconnect nodes & make a txn that remains in the unbroadcast set.
         self.disconnect_nodes(0, 1)
-        assert(len(self.nodes[0].getpeerinfo()) == 0)
-        assert(len(self.nodes[0].p2ps) == 0)
+        assert_equal(len(self.nodes[0].getpeerinfo()), 0)
+        assert_equal(len(self.nodes[0].p2ps), 0)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), Decimal("12"))
         self.connect_nodes(0, 2)
 
@@ -158,8 +158,8 @@ class MempoolPersistTest(BitcoinTestFramework):
 
         # ensure node0 doesn't have any connections
         # make a transaction that will remain in the unbroadcast set
-        assert(len(node0.getpeerinfo()) == 0)
-        assert(len(node0.p2ps) == 0)
+        assert_equal(len(node0.getpeerinfo()), 0)
+        assert_equal(len(node0.p2ps), 0)
         node0.sendtoaddress(self.nodes[1].getnewaddress(), Decimal("12"))
 
         # shutdown, then startup with wallet disabled
@@ -168,8 +168,9 @@ class MempoolPersistTest(BitcoinTestFramework):
 
         # check that txn gets broadcast due to unbroadcast logic
         conn = node0.add_p2p_connection(P2PTxInvStore())
-        node0.mockscheduler(16*60) # 15 min + 1 for buffer
+        node0.mockscheduler(16 * 60)  # 15 min + 1 for buffer
         self.wait_until(lambda: len(conn.get_invs()) == 1)
+
 
 if __name__ == '__main__':
     MempoolPersistTest().main()

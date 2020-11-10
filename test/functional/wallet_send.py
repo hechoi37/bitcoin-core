@@ -11,18 +11,19 @@ from test_framework.util import (
     assert_equal,
     assert_fee_amount,
     assert_greater_than,
-    assert_raises_rpc_error
+    assert_raises_rpc_error,
 )
+
 
 class WalletSendTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         # whitelist all peers to speed up tx relay / mempool sync
         self.extra_args = [
-            ["-whitelist=127.0.0.1","-walletrbf=1"],
-            ["-whitelist=127.0.0.1","-walletrbf=1"],
+            ["-whitelist=127.0.0.1", "-walletrbf=1"],
+            ["-whitelist=127.0.0.1", "-walletrbf=1"],
         ]
-        getcontext().prec = 8 # Satoshi precision for Decimal
+        getcontext().prec = 8  # Satoshi precision for Decimal
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -55,7 +56,7 @@ class WalletSendTest(BitcoinTestFramework):
             if psbt:
                 add_to_wallet = False
             else:
-                add_to_wallet = from_wallet.getwalletinfo()["private_keys_enabled"] # Default value
+                add_to_wallet = from_wallet.getwalletinfo()["private_keys_enabled"]  # Default value
         if psbt is not None:
             options["psbt"] = psbt
         if conf_target is not None:
@@ -79,7 +80,7 @@ class WalletSendTest(BitcoinTestFramework):
         if lock_unspents is not None:
             options["lock_unspents"] = lock_unspents
         if replaceable is None:
-            replaceable = True # default
+            replaceable = True  # default
         else:
             options["replaceable"] = replaceable
         if subtract_fee_from_outputs is not None:
@@ -170,22 +171,22 @@ class WalletSendTest(BitcoinTestFramework):
         w3 = self.nodes[1].get_wallet_rpc("w3")
         for _ in range(3):
             a2_receive = w2.getnewaddress()
-            a2_change = w2.getrawchangeaddress() # doesn't actually use change derivation
+            a2_change = w2.getrawchangeaddress()  # doesn't actually use change derivation
             res = w3.importmulti([{
                 "desc": w2.getaddressinfo(a2_receive)["desc"],
                 "timestamp": "now",
                 "keypool": True,
                 "watchonly": True
-            },{
+            }, {
                 "desc": w2.getaddressinfo(a2_change)["desc"],
                 "timestamp": "now",
                 "keypool": True,
                 "internal": True,
-                "watchonly": True
+                "watchonly": True,
             }])
             assert_equal(res, [{"success": True}, {"success": True}])
 
-        w0.sendtoaddress(a2_receive, 10) # fund w3
+        w0.sendtoaddress(a2_receive, 10)  # fund w3
         self.nodes[0].generate(1)
 
         # w4 has private keys enabled, but only contains watch-only keys (from w2)
@@ -197,11 +198,11 @@ class WalletSendTest(BitcoinTestFramework):
                 "desc": w2.getaddressinfo(a2_receive)["desc"],
                 "timestamp": "now",
                 "keypool": False,
-                "watchonly": True
+                "watchonly": True,
             }])
             assert_equal(res, [{"success": True}])
 
-        w0.sendtoaddress(a2_receive, 10) # fund w4
+        w0.sendtoaddress(a2_receive, 10)  # fund w4
         self.nodes[0].generate(1)
 
         self.log.info("Send to address...")
@@ -210,11 +211,11 @@ class WalletSendTest(BitcoinTestFramework):
 
         self.log.info("Don't broadcast...")
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False)
-        assert(res["hex"])
+        assert res["hex"]
 
         self.log.info("Return PSBT...")
         res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, psbt=True)
-        assert(res["psbt"])
+        assert res["psbt"]
 
         self.log.info("Create transaction that spends to address, but don't broadcast...")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False)

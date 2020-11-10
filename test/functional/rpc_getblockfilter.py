@@ -6,10 +6,13 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_equal, assert_is_hex_string, assert_raises_rpc_error,
-    )
+    assert_equal,
+    assert_is_hex_string,
+    assert_raises_rpc_error,
+)
 
 FILTER_TYPES = ["basic"]
+
 
 class GetBlockFilterTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -53,6 +56,7 @@ class GetBlockFilterTest(BitcoinTestFramework):
         # Test getblockfilter with undefined filter type
         genesis_hash = self.nodes[0].getblockhash(0)
         assert_raises_rpc_error(-5, "Unknown filtertype", self.nodes[0].getblockfilter, genesis_hash, "unknown")
+
 
 if __name__ == '__main__':
     GetBlockFilterTest().main()

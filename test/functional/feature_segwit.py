@@ -31,11 +31,13 @@ NODE_2 = 2
 P2WPKH = 0
 P2WSH = 1
 
+
 def getutxo(txid):
     utxo = {}
     utxo["vout"] = 0
     utxo["txid"] = txid
     return utxo
+
 
 def find_spendable_utxo(node, min_value):
     for utxo in node.listunspent(query_options={'minimumAmount': min_value}):
@@ -44,7 +46,9 @@ def find_spendable_utxo(node, min_value):
 
     raise AssertionError("Unspent output equal or higher than %s not found" % min_value)
 
-txs_mined = {} # txindex from txid to blockhash
+
+txs_mined = {}  # txindex from txid to blockhash
+
 
 class SegWitTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -111,8 +115,8 @@ class SegWitTest(BitcoinTestFramework):
 
         balance_presetup = self.nodes[0].getbalance()
         self.pubkey = []
-        p2sh_ids = [] # p2sh_ids[NODE][TYPE] is an array of txids that spend to P2WPKH (TYPE=0) or P2WSH (TYPE=1) scripts to an address for NODE embedded in p2sh
-        wit_ids = [] # wit_ids[NODE][TYPE] is an array of txids that spend to P2WPKH (TYPE=0) or P2WSH (TYPE=1) scripts to an address for NODE via bare witness
+        p2sh_ids = []  # p2sh_ids[NODE][TYPE] is an array of txids that spend to P2WPKH (TYPE=0) or P2WSH (TYPE=1) scripts to an address for NODE embedded in p2sh
+        wit_ids = []  # wit_ids[NODE][TYPE] is an array of txids that spend to P2WPKH (TYPE=0) or P2WSH (TYPE=1) scripts to an address for NODE via bare witness
         for i in range(3):
             newaddress = self.nodes[i].getnewaddress()
             self.pubkey.append(self.nodes[i].getaddressinfo(newaddress)["pubkey"])
@@ -189,7 +193,7 @@ class SegWitTest(BitcoinTestFramework):
         witnesses = coinbase_tx["decoded"]["vin"][0]["txinwitness"]
         assert_equal(len(witnesses), 1)
         assert_is_hex_string(witnesses[0])
-        assert_equal(witnesses[0], '00'*32)
+        assert_equal(witnesses[0], '00' * 32)
 
         self.log.info("Verify witness txs without witness data are invalid after the fork")
         self.fail_accept(self.nodes[2], 'non-mandatory-script-verify-flag (Witness program hash mismatch)', wit_ids[NODE_2][P2WPKH][2], sign=False)
@@ -234,7 +238,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Check that weight and vsize are properly reported in mempool entry (txid1)
         assert_equal(self.nodes[0].getmempoolentry(txid1)["vsize"], (self.nodes[0].getmempoolentry(txid1)["weight"] + 3) // 4)
-        assert_equal(self.nodes[0].getmempoolentry(txid1)["weight"], len(tx1.serialize_without_witness())*3 + len(tx1.serialize_with_witness()))
+        assert_equal(self.nodes[0].getmempoolentry(txid1)["weight"], len(tx1.serialize_without_witness()) * 3 + len(tx1.serialize_with_witness()))
 
         # Now create tx2, which will spend from txid1.
         tx = CTransaction()
@@ -250,7 +254,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Check that weight and vsize are properly reported in mempool entry (txid2)
         assert_equal(self.nodes[0].getmempoolentry(txid2)["vsize"], (self.nodes[0].getmempoolentry(txid2)["weight"] + 3) // 4)
-        assert_equal(self.nodes[0].getmempoolentry(txid2)["weight"], len(tx.serialize_without_witness())*3 + len(tx.serialize_with_witness()))
+        assert_equal(self.nodes[0].getmempoolentry(txid2)["weight"], len(tx.serialize_without_witness()) * 3 + len(tx.serialize_with_witness()))
 
         # Now create tx3, which will spend from txid2
         tx = CTransaction()
@@ -273,7 +277,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Check that weight and vsize are properly reported in mempool entry (txid3)
         assert_equal(self.nodes[0].getmempoolentry(txid3)["vsize"], (self.nodes[0].getmempoolentry(txid3)["weight"] + 3) // 4)
-        assert_equal(self.nodes[0].getmempoolentry(txid3)["weight"], len(tx.serialize_without_witness())*3 + len(tx.serialize_with_witness()))
+        assert_equal(self.nodes[0].getmempoolentry(txid3)["weight"], len(tx.serialize_without_witness()) * 3 + len(tx.serialize_with_witness()))
 
         # Mine a block to clear the gbt cache again.
         self.nodes[0].generate(1)
@@ -588,7 +592,7 @@ class SegWitTest(BitcoinTestFramework):
         p2sh = CScript(hex_str_to_bytes(v['scriptPubKey']))
         p2wsh = CScript([OP_0, sha256(bare)])
         p2sh_p2wsh = CScript([OP_HASH160, hash160(p2wsh), OP_EQUAL])
-        return([bare, p2sh, p2wsh, p2sh_p2wsh])
+        return [bare, p2sh, p2wsh, p2sh_p2wsh]
 
     def p2pkh_address_to_script(self, v):
         pubkey = hex_str_to_bytes(v['pubkey'])

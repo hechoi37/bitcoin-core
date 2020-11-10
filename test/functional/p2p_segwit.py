@@ -94,6 +94,7 @@ MAX_SIGOP_COST = 80000
 
 SEGWIT_HEIGHT = 120
 
+
 class UTXO():
     """Used to keep track of anyone-can-spend outputs that we can use in the tests."""
     def __init__(self, sha256, n, value):
@@ -101,9 +102,11 @@ class UTXO():
         self.n = n
         self.nValue = value
 
+
 def get_p2pkh_script(pubkeyhash):
     """Get the script associated with a P2PKH."""
     return CScript([CScriptOp(OP_DUP), CScriptOp(OP_HASH160), pubkeyhash, CScriptOp(OP_EQUALVERIFY), CScriptOp(OP_CHECKSIG)])
+
 
 def sign_p2pk_witness_input(script, tx_to, in_idx, hashtype, value, key):
     """Add signature for a P2PK witness program."""
@@ -111,6 +114,7 @@ def sign_p2pk_witness_input(script, tx_to, in_idx, hashtype, value, key):
     signature = key.sign_ecdsa(tx_hash) + chr(hashtype).encode('latin-1')
     tx_to.wit.vtxinwit[in_idx].scriptWitness.stack = [signature, script]
     tx_to.rehash()
+
 
 def get_virtual_size(witness_block):
     """Calculate the virtual size of a witness block.
@@ -121,6 +125,7 @@ def get_virtual_size(witness_block):
     # the "+3" is so we round up
     vsize = int((3 * base_size + total_size + 3) / 4)
     return vsize
+
 
 def test_transaction_acceptance(node, p2p, tx, with_witness, accepted, reason=None):
     """Send a transaction to the node and check that it's accepted to the mempool
@@ -213,6 +218,7 @@ class TestP2PConn(P2PInterface):
         self.send_message(msg_getdata(inv=[CInv(inv_type, blockhash)]))
         self.wait_for_block(blockhash, timeout)
         return self.last_message["block"].block
+
 
 class SegWitTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -692,13 +698,13 @@ class SegWitTest(BitcoinTestFramework):
         if not self.segwit_active:
             # Just check mempool acceptance, but don't add the transaction to the mempool, since witness is disallowed
             # in blocks and the tx is impossible to mine right now.
-            assert_equal(self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()]), [{'txid': tx3.hash, 'allowed': True, 'vsize': tx3.get_vsize(), 'fees': { 'base': Decimal('0.00001000')}}])
+            assert_equal(self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()]), [{'txid': tx3.hash, 'allowed': True, 'vsize': tx3.get_vsize(), 'fees': {'base': Decimal('0.00001000')}}])
             # Create the same output as tx3, but by replacing tx
             tx3_out = tx3.vout[0]
             tx3 = tx
             tx3.vout = [tx3_out]
             tx3.rehash()
-            assert_equal(self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()]), [{'txid': tx3.hash, 'allowed': True, 'vsize': tx3.get_vsize(), 'fees': { 'base': Decimal('0.00011000')}}])
+            assert_equal(self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()]), [{'txid': tx3.hash, 'allowed': True, 'vsize': tx3.get_vsize(), 'fees': {'base': Decimal('0.00011000')}}])
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=True)
 
         self.nodes[0].generate(1)
@@ -2109,6 +2115,7 @@ class SegWitTest(BitcoinTestFramework):
         # Check wtxidrelay feature negotiation message through connecting a new peer
         def received_wtxidrelay():
             return (len(self.wtx_node.last_wtxidrelay) > 0)
+
         self.wtx_node.wait_until(received_wtxidrelay)
 
         # Create a Segwit output from the latest UTXO
@@ -2142,7 +2149,7 @@ class SegWitTest(BitcoinTestFramework):
         self.tx_node.announce_tx_and_wait_for_getdata(tx2, use_wtxid=False)
         with p2p_lock:
             lgd = self.tx_node.lastgetdata[:]
-        assert_equal(lgd, [CInv(MSG_TX|MSG_WITNESS_FLAG, tx2.sha256)])
+        assert_equal(lgd, [CInv(MSG_TX | MSG_WITNESS_FLAG, tx2.sha256)])
 
         # Send tx2 through; it's an orphan so won't be accepted
         with p2p_lock:

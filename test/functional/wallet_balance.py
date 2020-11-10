@@ -44,6 +44,7 @@ def create_transactions(node, address, amt, fees):
 
     return txs
 
+
 class WalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
@@ -149,7 +150,6 @@ class WalletTest(BitcoinTestFramework):
         # Then our node would report a confirmed balance of 40 + 50 - 10 = 80
         # BTC, which is more than would be available if transaction 1 were
         # replaced.
-
 
         def test_balances(*, fee_node_1=0):
             # getbalances

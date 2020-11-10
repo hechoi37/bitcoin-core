@@ -16,6 +16,7 @@ import os
 
 TESTSDIR = os.path.dirname(os.path.realpath(__file__))
 
+
 class GetblockstatsTest(BitcoinTestFramework):
 
     start_height = 101
@@ -36,7 +37,7 @@ class GetblockstatsTest(BitcoinTestFramework):
         self.supports_cli = False
 
     def get_stats(self):
-        return [self.nodes[0].getblockstats(hash_or_height=self.start_height + i) for i in range(self.max_stat_pos+1)]
+        return [self.nodes[0].getblockstats(hash_or_height=self.start_height + i) for i in range(self.max_stat_pos + 1)]
 
     def generate_test_data(self, filename):
         mocktime = 1525107225
@@ -87,7 +88,6 @@ class GetblockstatsTest(BitcoinTestFramework):
         for b in blocks:
             self.nodes[0].submitblock(b)
 
-
     def run_test(self):
         test_data = os.path.join(TESTSDIR, self.options.test_data)
         if self.options.gen_test_data:
@@ -105,7 +105,7 @@ class GetblockstatsTest(BitcoinTestFramework):
         assert_equal(stats[0]['height'], self.start_height)
         assert_equal(stats[self.max_stat_pos]['height'], self.start_height + self.max_stat_pos)
 
-        for i in range(self.max_stat_pos+1):
+        for i in range(self.max_stat_pos + 1):
             self.log.info('Checking block %d\n' % (i))
             assert_equal(stats[i], self.expected_stats[i])
 
@@ -116,7 +116,7 @@ class GetblockstatsTest(BitcoinTestFramework):
 
         # Make sure each stat can be queried on its own
         for stat in expected_keys:
-            for i in range(self.max_stat_pos+1):
+            for i in range(self.max_stat_pos + 1):
                 result = self.nodes[0].getblockstats(hash_or_height=self.start_height + i, stats=[stat])
                 assert_equal(list(result.keys()), [stat])
                 if result[stat] != self.expected_stats[i][stat]:
@@ -140,7 +140,7 @@ class GetblockstatsTest(BitcoinTestFramework):
         inv_sel_stat = 'asdfghjkl'
         inv_stats = [
             [inv_sel_stat],
-            ['minfee' , inv_sel_stat],
+            ['minfee', inv_sel_stat],
             [inv_sel_stat, 'minfee'],
             ['minfee', inv_sel_stat, 'maxfee'],
         ]

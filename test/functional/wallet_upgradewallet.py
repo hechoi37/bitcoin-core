@@ -63,7 +63,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         v16_3_node = self.nodes[1]
         to_height = node_from.getblockcount()
         height = self.nodes[1].getblockcount()
-        for i in range(height, to_height+1):
+        for i in range(height, to_height + 1):
             b = node_from.getblock(blockhash=node_from.getblockhash(i), verbose=0)
             v16_3_node.submitblock(b)
         assert_equal(v16_3_node.getblockcount(), to_height)
@@ -74,11 +74,11 @@ class UpgradeWalletTest(BitcoinTestFramework):
         res = self.nodes[0].getblockchaininfo()
         assert_equal(res['blocks'], 101)
         node_master = self.nodes[0]
-        v16_3_node  = self.nodes[1]
-        v15_2_node  = self.nodes[2]
+        v16_3_node = self.nodes[1]
+        v15_2_node = self.nodes[2]
 
         # Send coins to old wallets for later conversion checks.
-        v16_3_wallet  = v16_3_node.get_wallet_rpc('wallet.dat')
+        v16_3_wallet = v16_3_node.get_wallet_rpc('wallet.dat')
         v16_3_address = v16_3_wallet.getnewaddress()
         node_master.generatetoaddress(101, v16_3_address, sync_fun=lambda: self.dumb_sync_blocks())
         v16_3_balance = v16_3_wallet.getbalance()
@@ -86,8 +86,8 @@ class UpgradeWalletTest(BitcoinTestFramework):
         self.log.info("Test upgradewallet RPC...")
         # Prepare for copying of the older wallet
         node_master_wallet_dir = os.path.join(node_master.datadir, "regtest/wallets")
-        v16_3_wallet       = os.path.join(v16_3_node.datadir, "regtest/wallets/wallet.dat")
-        v15_2_wallet       = os.path.join(v15_2_node.datadir, "regtest/wallet.dat")
+        v16_3_wallet = os.path.join(v16_3_node.datadir, "regtest/wallets/wallet.dat")
+        v15_2_wallet = os.path.join(v15_2_node.datadir, "regtest/wallet.dat")
         self.stop_nodes()
 
         # Copy the 0.16.3 wallet to the last Bitcoin Core version and open it:
@@ -95,7 +95,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         os.mkdir(node_master_wallet_dir)
         shutil.copy(
             v16_3_wallet,
-            node_master_wallet_dir
+            node_master_wallet_dir,
         )
         self.restart_node(0, ['-nowallet'])
         node_master.loadwallet('')
@@ -118,7 +118,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         os.mkdir(node_master_wallet_dir)
         shutil.copy(
             v15_2_wallet,
-            node_master_wallet_dir
+            node_master_wallet_dir,
         )
         self.restart_node(0, ['-nowallet'])
         node_master.loadwallet('')
@@ -134,6 +134,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal(new_version, 169900)
         # after conversion master key hash should be present
         assert_is_hex_string(wallet.getwalletinfo()['hdseedid'])
+
 
 if __name__ == '__main__':
     UpgradeWalletTest().main()

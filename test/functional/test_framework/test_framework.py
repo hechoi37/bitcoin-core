@@ -39,6 +39,7 @@ class TestStatus(Enum):
     FAILED = 2
     SKIPPED = 3
 
+
 TEST_EXIT_PASSED = 0
 TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
@@ -48,7 +49,6 @@ TMPDIR_PREFIX = "bitcoin_func_test_"
 
 class SkipTest(Exception):
     """This exception is raised to skip a test"""
-
     def __init__(self, message):
         self.message = message
 
@@ -112,9 +112,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.wallet_names = None
         self.set_test_params()
         assert self.wallet_names is None or len(self.wallet_names) <= self.num_nodes
-        if self.options.timeout_factor == 0 :
+        if self.options.timeout_factor == 0:
             self.options.timeout_factor = 99999
-        self.rpc_timeout = int(self.rpc_timeout * self.options.timeout_factor) # optionally, increase timeout by a factor
+        self.rpc_timeout = int(self.rpc_timeout * self.options.timeout_factor)  # optionally, increase timeout by a factor
 
     def main(self):
         """Main function. This should not be overridden by the subclass test scripts."""
@@ -222,7 +222,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
 
         os.environ['PATH'] = os.pathsep.join([
             os.path.join(config['environment']['BUILDDIR'], 'src'),
-            os.path.join(config['environment']['BUILDDIR'], 'src', 'qt'), os.environ['PATH']
+            os.path.join(config['environment']['BUILDDIR'], 'src', 'qt'),
+            os.environ['PATH'],
         ])
 
         # Set up temp directory and start logging
